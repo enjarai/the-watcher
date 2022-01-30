@@ -1,0 +1,9 @@
+# insert your bot token here.
+token:
+
+# id of bot owner, doesn't really do anything rn.
+owner_id: 318332290327511041
+
+# directory to store downloaded schematic files.
+# only one gets stored here at a time, any schematics for active interactions are held in memory.
+temp_directory: run/
