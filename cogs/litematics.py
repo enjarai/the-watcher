@@ -9,7 +9,7 @@ import litematicparse
 
 
 class MaterialListView(nextcord.ui.View):
-    def __init__(self, name, region, *, timeout=None, blocks=True, entities=True, inventories=False):
+    def __init__(self, name, region, *, timeout=180, blocks=True, entities=True, inventories=False):
         super().__init__(timeout=timeout)
         self.opts = {"Blocks": blocks, "Entities": entities, "Inventories": inventories}
         self.name = name
@@ -17,6 +17,9 @@ class MaterialListView(nextcord.ui.View):
 
         for opt in self.opts:
             self.add_toggle(opt, opt, self.toggle)
+
+    async def on_timeout(self):
+        await self.message.edit(view=None)
 
     def add_toggle(self, label, opt, callback):
         item = Button(
@@ -42,6 +45,7 @@ class MaterialListView(nextcord.ui.View):
     @nextcord.ui.button(label="Delete", style=nextcord.ButtonStyle.danger)
     async def delete(self, button, interaction):
         await interaction.message.delete()
+        self.stop()
 
     @staticmethod
     def get_toggled_style(active):
@@ -52,8 +56,6 @@ class Litematics(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-
-        # https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.18.1/assets/minecraft/lang/en_us.json
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -70,7 +72,8 @@ class Litematics(commands.Cog):
                 print(f'  Sending response')
                 for name, region in schematic.regions.items():
                     view = MaterialListView(name, region)
-                    await message.reply(embed=self.get_material_list_embed(name, region, view.opts), view=view)
+                    view.message = await message.reply(
+                        embed=self.get_material_list_embed(name, region, view.opts), view=view)
 
     @staticmethod
     def get_material_list_embed(name, region, opts):
