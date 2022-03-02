@@ -14,7 +14,8 @@ intents = nextcord.Intents.default()
 intents.messages = True
 
 cogs = [
-    'litematics'
+    #'litematics',
+    'quantum_channel'
 ]
 
 
@@ -53,7 +54,7 @@ class Bot(commands.Bot, ABC):
         except Exception as e:
             print(f"Could not load cog {e}")
 
-        print("---------------LitematicBot-----------------"
+        print("---------------The Watcher------------------"
               f"\nBot is online and connected to {self.user}"
               "\nCreated by enjarai"
               f"\nConnected to {(len(self.guilds))} Guilds."
