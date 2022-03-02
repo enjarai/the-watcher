@@ -15,10 +15,10 @@ class Litematics(commands.Cog):
             self.channels.append(self.bot.get_channel(chan))
         self.quantum_loop.start()
 
-    @tasks.loop(seconds=10)
+    @tasks.loop(hours=6)
     async def quantum_loop(self):
         for chan in self.channels:
-            print("moving " + chan.name)
+            # print("moving " + chan.name)
             max_pos = chan.category.text_channels[-1].position
             await chan.edit(position=random.randint(0, max_pos))
             await asyncio.sleep(1)
