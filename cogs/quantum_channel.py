@@ -5,7 +5,7 @@ from nextcord.ext import commands
 from nextcord.ext import tasks
 
 
-class Litematics(commands.Cog):
+class Quantum(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
@@ -25,4 +25,4 @@ class Litematics(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(Litematics(bot))
+    bot.add_cog(Quantum(bot))
