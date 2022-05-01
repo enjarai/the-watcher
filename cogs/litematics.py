@@ -1,19 +1,17 @@
 from functools import partial
 from os import path
-
-import nextcord.ui
 from nextcord.ext import commands
 from nextcord.ui import Button
-
-import litematicparse
+from litematica_tools import *
+import nextcord.ui
 
 
 class MaterialListView(nextcord.ui.View):
-    def __init__(self, name, region, *, timeout=180, blocks=True, entities=True, inventories=False):
+    def __init__(self, name, schematic, *, timeout=180, blocks=True, entities=True, inventories=False):
         super().__init__(timeout=timeout)
         self.opts = {"Blocks": blocks, "Entities": entities, "Inventories": inventories}
         self.name = name
-        self.region = region
+        self.schematic = schematic
 
         for opt in self.opts:
             self.add_toggle(opt, opt, self.toggle)
@@ -39,7 +37,7 @@ class MaterialListView(nextcord.ui.View):
         await self.update(interaction)
 
     async def update(self, interaction):
-        embed = Litematics.get_material_list_embed(self.name, self.region, self.opts)
+        embed = Litematics.get_material_list_embed(self.name, self.schematic, self.opts)
         await interaction.response.edit_message(embed=embed, view=self)
 
     @nextcord.ui.button(label="Delete", style=nextcord.ButtonStyle.danger)
@@ -57,6 +55,10 @@ class Litematics(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @nextcord.slash_command(name="ping", guild_ids=[924620686486560778])
+    async def ping(self, interaction):
+        await interaction.response.send_message("pong lmao")
+
     @commands.Cog.listener()
     async def on_message(self, message):
         for attachment in message.attachments:
@@ -67,23 +69,24 @@ class Litematics(commands.Cog):
                 file = path.join(self.bot.CONFIG['temp_directory'], 'schematic.litematic')
                 await attachment.save(file)
 
-                schematic = litematicparse.Litematic(file)
+                schematic = NBTFile(file)
+                m_list = MaterialList(schematic)
 
                 print(f'  Sending response')
-                for name, region in schematic.regions.items():
-                    view = MaterialListView(name, region)
-                    view.message = await message.reply(
-                        embed=self.get_material_list_embed(name, region, view.opts), view=view)
+                view = MaterialListView(attachment.filename, m_list)
+                view.message = await message.reply(
+                    embed=self.get_material_list_embed(attachment.filename, m_list, view.opts), view=view)
 
     @staticmethod
-    def get_material_list_embed(name, region, opts):
+    def get_material_list_embed(name, schematic, opts):
         materials = (
-            (region.block_count() if opts["Blocks"] else litematicparse.MaterialList()) +
-            (region.entity_count() if opts["Entities"] else litematicparse.MaterialList()) +
-            (region.inventory_count() if opts["Inventories"] else litematicparse.MaterialList())
+                (schematic.block_list() if opts["Blocks"] else Counter()) +
+                (schematic.entity_list() if opts["Entities"] else Counter()) +
+                (schematic.item_list() if opts["Inventories"] else Counter())
         )
-        formatted = str(materials)
-        embed = nextcord.Embed(title=name, description=f"```{formatted if formatted else 'Empty'}```")
+        formatted = [f'{k}: {v}' for k, v in materials.items()]
+        merged = '\n'.join(formatted)
+        embed = nextcord.Embed(title=name, description=f"```{merged if merged else 'Empty'}```")
         return embed
 
 
