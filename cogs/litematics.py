@@ -9,6 +9,12 @@ from litematica_tools import MaterialList
 from nextcord.ext import commands
 from nextcord.ui import Button
 
+SUPPORTED_EXTENSIONS = [
+    '.litematic',
+    '.nbt',
+    '.schem',
+]
+
 
 class MaterialListView(nextcord.ui.View):
     def __init__(self, name, mat_list, *, timeout=180, blocks=True, entities=True, inventories=False):
@@ -72,23 +78,19 @@ class Litematics(commands.Cog):
         for f in files:
             os.remove(f)
 
-    @nextcord.slash_command(name="ping", description="test")
-    async def ping(self, interaction: nextcord.Interaction):
-        await interaction.response.send_message("pong lmao")
-
     @nextcord.message_command(name="Parse Schematic")
     async def parse_command(self, interaction: nextcord.Interaction, message: nextcord.Message):
         for attachment in message.attachments:
 
             # Check file extension for compatibility
-            if attachment.filename.endswith('.litematic'):  # TODO update to work with all types
+            if ext := self.is_valid_schem(attachment.filename):
 
                 # File is valid, so defer the response
                 await interaction.response.defer()
                 self.LOGGER.info(f'Downloading and parsing {attachment.filename}')
 
                 # Download the file, unless we have it cached
-                file = path.join(self.schems_path(), f'{message.id}.litematic')
+                file = path.join(self.schems_path(), f'{message.id}{ext}')
                 if path.isfile(file):
                     self.LOGGER.info('  File cached, skipping download...')
                 else:
@@ -116,6 +118,13 @@ class Litematics(commands.Cog):
         await interaction.response.send_message('This message does not contain a supported schematic.', ephemeral=True)
 
     @staticmethod
+    def is_valid_schem(p: str):
+        for ext in SUPPORTED_EXTENSIONS:
+            if p.endswith(ext):
+                return ext
+        return False
+
+    @staticmethod
     def get_material_list_embed(name, mat_list, opts):
 
         # Compose the list by checking the pressed buttons
@@ -130,8 +139,8 @@ class Litematics(commands.Cog):
 
         list_stacks = list_items.get_stacks()
         formatted = ''
-        for k, v in list_items.items():
-            formatted += '{}: {}{} {}{}\n'.format(
+        for k, v in list_items.items():  # TODO max items per page 50
+            formatted += '{} {}{} {}{}\n'.format(
                 k,
                 ' ' * (max_name_len - len(k)),
                 v,

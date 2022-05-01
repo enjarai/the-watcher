@@ -16,7 +16,7 @@ intents = nextcord.Intents.default()
 
 cogs = [
     'litematics',
-    # 'quantum_channel',
+    'utils',
 ]
 slash_guilds = [
     924620686486560778,
