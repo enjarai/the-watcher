@@ -14,7 +14,8 @@ intents = nextcord.Intents.default()
 intents.messages = True
 
 cogs = [
-    'litematics'
+    'litematics',
+    #'quantum_channel',
 ]
 
 
