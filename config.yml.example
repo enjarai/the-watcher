@@ -4,6 +4,7 @@ token:
 # id of bot owner, doesn't really do anything rn.
 owner_id: 318332290327511041
 
-# directory to store downloaded schematic files.
-# only one gets stored here at a time, any schematics for active interactions are held in memory.
+# directory to store temporary files, such as downloaded schematic files.
 temp_directory: run/
+
+

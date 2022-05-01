@@ -1,4 +1,5 @@
 import datetime
+import logging
 import os
 import sys
 from abc import ABC
@@ -10,18 +11,23 @@ from nextcord.ext import commands
 with open('config.yml', 'r') as f:
     CONFIG = yaml.load(f, yaml.Loader)
 
+logging.basicConfig(level=logging.INFO)
 intents = nextcord.Intents.default()
-intents.messages = True
 
 cogs = [
     'litematics',
-    #'quantum_channel',
+    # 'quantum_channel',
+]
+slash_guilds = [
+    924620686486560778,
+    783713805276151829
 ]
 
 
 class Bot(commands.Bot, ABC):
     def __init__(self, config):
         self.CONFIG = config
+        self.LOGGER = logging.getLogger('main')
 
         super().__init__(
             command_prefix="!",
@@ -50,16 +56,20 @@ class Bot(commands.Bot, ABC):
         try:
             for cog in cogs:
                 self.load_extension(f"cogs.{cog}")
-                print(f'Loaded {cog}')
+                # for guild_id in slash_guilds:
+                #     guild = self.get_guild(guild_id)
+                #     await guild.rollout_application_commands()
+                self.LOGGER.info(f'Loaded {cog}')
+            await self.rollout_application_commands()
         except Exception as e:
-            print(f"Could not load cog {e}")
+            self.LOGGER.error(f"Could not load cog {e}")
 
-        print("---------------The Watcher------------------"
-              f"\nBot is online and connected to {self.user}"
-              "\nCreated by enjarai"
-              f"\nConnected to {(len(self.guilds))} Guilds."
-              f"\nDetected Operating System: {sys.platform.title()}"
-              "\n--------------------------------------------")
+        self.LOGGER.info("---------------The Watcher------------------"
+                         f"\nBot is online and connected to {self.user}"
+                         "\nCreated by enjarai"
+                         f"\nConnected to {(len(self.guilds))} Guilds."
+                         f"\nDetected Operating System: {sys.platform.title()}"
+                         "\n--------------------------------------------")
 
 
 Bot(CONFIG).run(CONFIG['token'])
